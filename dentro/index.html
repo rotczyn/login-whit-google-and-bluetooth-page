@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://www.svgrepo.com/show/243983/bluetooth.svg">
+    <link rel="stylesheet" href="styles1.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,700,0,0" />
+    <title>TestLogin</title>
+</head>
+
+<body>
+    <nav class="navbar visible" id="navbar">
+        <img id="logo" src="./bluetooth-bluetooth-svgrepo-com.svg" />
+        <div class="nav-items">
+            <button id="sign-out">Cerrar sesión</button>
+        </div>
+    </nav>
+    <div class="background">
+        <div class="tk-blob" style="--fill: #8f44fd">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 317.5 353.7">
+                <path
+                    d="M291.8 55.3c30.4 39.9 30.7 102 17 160.4-13.8 58.3-41.6 112.9-84 130.9s-99.3-.6-137-30C50.2 287.1 32 246.9 17 200.5 2.1 154.1-9.6 101.4 11.5 63.6 32.6 25.8 86.6 2.8 143.8.2c57.2-2.6 117.6 15.2 148 55.1z">
+                </path>
+            </svg>
+        </div>
+        <div class="tk-blob" style="--fill: #61a5ff">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 371.5 297.7">
+                <path
+                    d="M286.9 54.2c42.7 34.9 89.4 85.3 84.2 130.4-5.2 45.1-62.1 84.7-118 102.3S142.3 300 94.8 278C47.2 256 6.9 216.6.8 173.9S22.7 85.2 56 52.4C89.4 19.6 127.9.1 166.6 0s77.6 19.2 120.3 54.2z">
+                </path>
+            </svg>
+        </div>
+    </div>
+    <div class="overlay"></div>
+    <div class="login">
+        <img id="profile-image" src="avatar.svg" />
+        <h3>¡Qué bueno verte!</h3>
+        <h2 id="user-name"></h2>
+        <form class="login-form">
+            <button id="check-permission-btn">Verificar permisos Bluetooth</button>
+            <button id="connect-btn">Conectar dispositivo Bluetooth</button>
+            <button id="send-btn" disabled>Enviar datos</button>
+            <div id="received-data"></div>
+        </form>
+    </div>
+    <div id="user-status"></div>
+
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyDaJ-7EMmVw_DQOJ9WafesXcB6GD3dP-oo",
+            authDomain: "testlogin-7f854.firebaseapp.com",
+            projectId: "testlogin-7f854",
+            storageBucket: "testlogin-7f854.appspot.com",
+            messagingSenderId: "797713056120",
+            appId: "1:797713056120:web:62ddf0655381a00b5c888d",
+            measurementId: "G-HFR64CV06J"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const userStatus = document.getElementById("user-status");
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // El usuario ha iniciado sesión correctamente
+                userStatus.textContent = "Usuario autenticado: " + user.displayName;
+                console.log("Usuario autenticado:", user);
+                console.log(auth.currentUser);
+                const profileImage = document.getElementById("profile-image");
+                const userName = document.getElementById("user-name");
+                // Actualizar la imagen de perfil y el nombre de usuario
+                profileImage.src = user.photoURL ? user.photoURL : "avatar.jpg";
+                userName.textContent = user.displayName ? user.displayName : "Nombre de usuario";
+            } else {
+                // El usuario no ha iniciado sesión
+                userStatus.textContent = "Usuario no autenticado";
+                window.location.href = "http://192.168.1.39/testlogin/";
+            }
+        });
+
+        const signOutButton = document.getElementById("sign-out");
+        signOutButton.addEventListener("click", () => {
+            signOut(auth)
+                .then(() => {
+                    // Cierre de sesión exitoso
+                    console.log("Cierre de sesión exitoso");
+                    window.location.href = "http://192.168.1.39/testlogin/";
+                })
+                .catch((error) => {
+                    // Error al cerrar sesión
+                    console.log("Error al cerrar sesión:", error);
+                });
+        });
+
+        const connectButton = document.getElementById('connect-btn');
+        const sendButton = document.getElementById('send-btn');
+        const receivedDataDiv = document.getElementById('received-data');
+        let bluetoothDevice;
+        let bluetoothCharacteristic;
+
+        connectButton.addEventListener('click', async (event) => {
+            event.preventDefault(); // Evitar el envío del formulario y la recarga de la página
+
+            try {
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true, // Permitir que el usuario seleccione cualquier dispositivo Bluetooth
+                });
+
+                alert('Se ha establecido la conexión con el dispositivo Bluetooth');
+                const server = await bluetoothDevice.gatt.connect();
+                const services = await server.getPrimaryServices();
+                const characteristic = await services[0].getCharacteristic('<INSERT_CHARACTERISTIC_UUID>'); // Reemplazar por el UUID de la característica del dispositivo Bluetooth
+                bluetoothCharacteristic = characteristic;
+
+                connectButton.disabled = true;
+                sendButton.disabled = false;
+
+                // Evento para recibir datos del dispositivo Bluetooth
+                bluetoothCharacteristic.addEventListener('characteristicvaluechanged', handleReceivedData);
+            } catch (error) {
+                console.log('Error al conectar con el dispositivo Bluetooth:', error);
+                alert('No se pudo conectar con el dispositivo Bluetooth: ' + error.message);
+            }
+        });
+
+        sendButton.addEventListener('click', async () => {
+            event.preventDefault(); // Evitar el envío del formulario y la recarga de la página
+            try {
+                const data = 'Hola, dispositivo Bluetooth!'; // Datos que deseas enviar
+                const encoder = new TextEncoder();
+                const value = encoder.encode(data);
+
+                await bluetoothCharacteristic.writeValue(value);
+                console.log('Datos enviados correctamente:', data);
+            } catch (error) {
+                console.log('Error al enviar datos:', error);
+            }
+        });
+
+        async function handleReceivedData(event) {
+            const value = new TextDecoder().decode(event.target.value);
+            receivedDataDiv.textContent = value;
+        }
+
+        // Evento para recibir datos del dispositivo Bluetooth
+        if (bluetoothCharacteristic) {
+            bluetoothCharacteristic.addEventListener('characteristicvaluechanged', handleReceivedData);
+        }
+
+        const checkPermissionButton = document.getElementById('check-permission-btn');
+        const permissionStatus = document.getElementById('permission-status');
+
+        checkPermissionButton.addEventListener('click', async (event) => {
+            event.preventDefault(); // Evitar el envío del formulario y la recarga de la página
+            try {
+                // Verificar si el navegador admite la API Web Bluetooth
+                if (!navigator.bluetooth) {
+                    console.log('El navegador no admite la API Web Bluetooth');
+                    return;
+                }
+
+                // Verificar si los permisos para acceder al Bluetooth ya se han otorgado
+                const permission = await navigator.permissions.query({ name: 'bluetooth' });
+
+                if (permission.state === 'granted') {
+                    permissionStatus.textContent = '✓'; // Mostrar tilde si se han otorgado los permisos
+                    window.alert('Se han otorgado permisos para acceder al Bluetooth');
+                    console.log('Se han otorgado permisos para acceder al Bluetooth');
+                } else if (permission.state === 'prompt') {
+                    permissionStatus.textContent = 'Nop'; // Quitar contenido si se solicitarán los permisos
+                    window.alert('Se solicitarán permisos para acceder al Bluetooth');
+                    console.log('Se solicitarán permisos para acceder al Bluetooth');
+                } else if (permission.state === 'denied') {
+                    permissionStatus.textContent = 'Nop'; // Quitar contenido si se han denegado los permisos
+                    window.alert('Se han denegado los permisos para acceder al Bluetooth');
+                    console.log('Se han denegado los permisos para acceder al Bluetooth');
+                }
+            } catch (error) {
+                console.log('Error al verificar los permisos Bluetooth:', error);
+                window.alert('Error al verificar los permisos Bluetooth: ' + error.message);
+            }
+        });
+
+    </script>
+</body>
+
+</html>
