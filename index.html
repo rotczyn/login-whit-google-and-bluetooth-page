@@ -91,7 +91,6 @@
         measurementId: "G-HFR64CV06J"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const analytics = getAnalytics(app);
@@ -108,18 +107,15 @@
 
         createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                // Signed in
                 const user = userCredential.user;
                 set(ref(database, 'users/' + user.uid), {
                     email: email,
                     password: password
                 })
                     .then(() => {
-                        // Data saved successfully!
                         alert("Usuario creado correctamente.");
                     })
                     .catch((error) => {
-                        // The write failed...
                         alert(error);
                     });
 
@@ -127,7 +123,6 @@
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
-                // ..
                 alert("El usuario no pudo crearse" + errorMessage)
             });
 
@@ -144,7 +139,6 @@
                         alert("Usuario creado correctamente.");
                     })
                     .catch((error) => {
-                        // The write failed...
                         alert(error);
                     });
 
@@ -164,23 +158,15 @@
 
         getRedirectResult(auth)
             .then((result) => {
-                // This gives you a Google Access Token. You can use it to access Google APIs.
                 const credential = GoogleAuthProvider.credentialFromResult(result);
                 const token = credential.accessToken;
 
-                // The signed-in user info.
                 const user = result.user;
-                // IdP data available using getAdditionalUserInfo(result)
-                // ...
             }).catch((error) => {
-                // Handle Errors here.
                 const errorCode = error.code;
                 const errorMessage = error.message;
-                // The email of the user's account used.
                 const email = error.customData.email;
-                // The AuthCredential type that was used.
                 const credential = GoogleAuthProvider.credentialFromError(error);
-                // ...
             });
     });
 
@@ -188,7 +174,6 @@
 
     auth.onAuthStateChanged((user) => {
         if (user) {
-            // El usuario ha iniciado sesión correctamente
             userStatus.textContent = "Usuario autenticado: " + user.displayName;
             console.log("Usuario autenticado:", user);
             window.location.href = "http://192.168.1.39/testlogin/dentro/";
@@ -197,7 +182,6 @@
             profileImage.src = user.photoURL ? user.photoURL : "avatar.jpg";
             userName.textContent = user.displayName ? user.displayName : "Nombre de usuario";
         } else {
-            // El usuario no ha iniciado sesión
             userStatus.textContent = "Usuario no autenticado";
         }
     });
